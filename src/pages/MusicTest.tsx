@@ -520,12 +520,19 @@ const MusicTest = () => {
               onChange={(e) => setApiBaseUrl(e.target.value)}
               placeholder="https://<project>.vercel.app"
             />
-            {!apiBaseUrl.trim() && typeof window !== "undefined" && window.location.host.includes("lovableproject.com") ? (
-              <p className="text-xs text-muted-foreground">
-                Anda sedang di preview Lovable (frontend only). Endpoint <span className="font-mono">/api/*</span> tidak tersedia di sini,
-                jadi akan 404 sampai Anda mengisi API Base URL.
-              </p>
-            ) : null}
+            {(() => {
+              const host = typeof window !== "undefined" ? window.location.host : "";
+              const isLovablePreview = host.includes("lovable.app") || host.includes("lovableproject.com");
+              if (!apiBaseUrl.trim() && isLovablePreview) {
+                return (
+                  <p className="text-xs text-muted-foreground">
+                    Anda sedang di preview Lovable (frontend only). Endpoint <span className="font-mono">/api/*</span> tidak tersedia di sini,
+                    jadi akan <span className="font-mono">404</span> sampai Anda mengisi API Base URL.
+                  </p>
+                );
+              }
+              return null;
+            })()}
           </CardContent>
         </Card>
 
