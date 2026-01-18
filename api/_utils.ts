@@ -17,9 +17,20 @@ export function json(res: any, status: number, body: unknown) {
 }
 
 export function normalizeAuthor(payload: any) {
-  if (!payload || typeof payload !== "object") return payload;
-  const { creator, ...rest } = payload;
-  return { Author: AUTHOR, ...rest };
+  const stripCreatorDeep = (value: any): any => {
+    if (Array.isArray(value)) return value.map(stripCreatorDeep);
+    if (!value || typeof value !== "object") return value;
+
+    const out: any = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (k === "creator") continue;
+      out[k] = stripCreatorDeep(v);
+    }
+    return out;
+  };
+
+  // Selalu pakai Author konsisten dan pastikan semua "creator" hilang (nested juga)
+  return { Author: AUTHOR, ...stripCreatorDeep(payload) };
 }
 
 export async function readJsonBody(req: any) {

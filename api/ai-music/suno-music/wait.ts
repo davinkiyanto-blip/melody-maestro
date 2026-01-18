@@ -8,7 +8,7 @@ import {
   PAXSENIX_BASE_URL,
   readJsonBody,
   sleep,
-} from "../../../_utils";
+} from "../../_utils";
 
 const Models = ["V3_5", "V4", "V4_5", "V4_5PLUS", "V5"] as const;
 

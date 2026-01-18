@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getKieApiKey, json, normalizeAuthor, readJsonBody, KIE_SUNO_UPLOAD_COVER_URL } from "../_utils";
+import { getKieApiKey, json, normalizeAuthor, readJsonBody, KIE_SUNO_UPLOAD_COVER_URL } from "../../_utils";
 
 const Models = ["V4", "V4_5", "V4_5PLUS", "V4_5ALL", "V5"] as const;
 

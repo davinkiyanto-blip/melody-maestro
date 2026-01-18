@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getKieApiKey, json, normalizeAuthor, readJsonBody, KIE_FILE_UPLOAD_URL } from "../_utils";
+import { getKieApiKey, json, normalizeAuthor, readJsonBody, KIE_FILE_UPLOAD_URL } from "../../_utils";
 
 type KieUploadResult = {
   success: boolean;
