@@ -6,6 +6,10 @@ export const PAXSENIX_BASE_URL = "https://api.paxsenix.org";
 export const DEFAULT_POLL_INTERVAL_MS = 5000;
 export const DEFAULT_TIMEOUT_MS = 300000; // 5 minutes
 
+// KIE endpoints
+export const KIE_FILE_UPLOAD_URL = "https://kieai.redpandaai.co/api/file-url-upload";
+export const KIE_SUNO_UPLOAD_COVER_URL = "https://api.kie.ai/api/v1/generate/upload-cover";
+
 export function json(res: any, status: number, body: unknown) {
   res.statusCode = status;
   res.setHeader("Content-Type", "application/json; charset=utf-8");
@@ -37,5 +41,11 @@ export function sleep(ms: number) {
 export function getApiKey() {
   const key = process.env.PAXSENIX_API_KEY;
   if (!key) throw new Error("Missing env PAXSENIX_API_KEY");
+  return key;
+}
+
+export function getKieApiKey() {
+  const key = process.env.KIE_API_KEY;
+  if (!key) throw new Error("Missing env KIE_API_KEY");
   return key;
 }
