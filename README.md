@@ -72,9 +72,7 @@ Folder `api/` berisi Vercel Serverless Functions siap deploy.
 2) Import ke Vercel
 3) Set Environment Variable berikut:
    - `PAXSENIX_API_KEY` (private)
-
-
-
+   - `KIE_API_KEY` (private)
 
 ## Backend API (Vercel) — Endpoint Docs
 
@@ -82,11 +80,15 @@ Base URL contoh:
 - Lokal: `http://localhost:3000`
 - Production: `https://<project>.vercel.app`
 
+Halaman tes (mobile-friendly):
+- `GET /music-test`
+
 Semua endpoint akan menambahkan:
 - `Author: "@Dafidxcode"`
 
-> Catatan: Endpoint Paxsenix membutuhkan env `PAXSENIX_API_KEY`.
-> Endpoint KIE membutuhkan env `KIE_API_KEY`.
+> Catatan:
+> - Endpoint Paxsenix membutuhkan env `PAXSENIX_API_KEY`.
+> - Endpoint KIE membutuhkan env `KIE_API_KEY`.
 
 ---
 
@@ -289,6 +291,16 @@ curl -X POST "https://<project>.vercel.app/api/ai-music/suno-music/wait-upload" 
 ```bash
 curl -X GET "https://<project>.vercel.app/api/task/1768393259037-n49bnbx3o"
 ```
+
+---
+
+## Halaman Tes (UI)
+Buka: `GET /music-test`
+
+UI ini dibuat untuk memastikan semua fitur bisa dites **terpisah** (sesuai kebutuhan server utama):
+- Tab **Paxsenix**: `POST /api/ai-music/suno-music`, `POST /api/ai-music/suno-music/wait`, `GET /api/task/:jobId`
+- Tab **Upload Hosting**: `POST /api/ai-music/suno-music/wait-upload` (menampilkan `records.audio_url` dan `kieUploads[].kie.downloadUrl` + audio player)
+- Tab **Cover**: `POST /api/ai-music/cover-audio` dan tester `POST /api/ai-music/cover-audio/callback` (simulasi payload untuk melihat hasil upload)
 
 ---
 
