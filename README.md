@@ -74,18 +74,23 @@ Folder `api/` berisi Vercel Serverless Functions siap deploy.
    - `PAXSENIX_API_KEY` (private)
 
 
+
+
 ## Backend API (Vercel) — Endpoint Docs
 
 Base URL contoh:
 - Lokal: `http://localhost:3000`
 - Production: `https://<project>.vercel.app`
 
-Semua endpoint akan:
-- meneruskan request ke `https://api.paxsenix.org`
-- **menghapus** field `creator`
-- mengganti menjadi **`Author: "@Dafidxcode"`**
+Semua endpoint akan menambahkan:
+- `Author: "@Dafidxcode"`
 
-### 1) Generate Job
+> Catatan: Endpoint Paxsenix membutuhkan env `PAXSENIX_API_KEY`.
+> Endpoint KIE membutuhkan env `KIE_API_KEY`.
+
+---
+
+### 1) Generate Job (Paxsenix)
 **POST** `/api/ai-music/suno-music`
 
 #### Request body
@@ -129,7 +134,7 @@ curl -X POST "https://<project>.vercel.app/api/ai-music/suno-music" \
 
 ---
 
-### 2) Wait Until Done (Server-to-Server)
+### 2) Wait Until Done (Paxsenix)
 **POST** `/api/ai-music/suno-music/wait`
 
 Endpoint ini akan:
@@ -220,7 +225,64 @@ curl -X POST "https://<project>.vercel.app/api/ai-music/suno-music/wait?timeoutM
 
 ---
 
-### 3) Check Status by Job ID
+### 3) Wait + Upload to KIE (Paxsenix ➜ KIE)
+**POST** `/api/ai-music/suno-music/wait-upload`
+
+Endpoint ini sama seperti `/wait`, tetapi setelah `done` akan:
+- mengambil `records[].audio_url`
+- upload ke KIE **File Upload via URL**
+- mengembalikan response `kieUploads[]` berisi `downloadUrl`, `fileSizeMB`, dll.
+
+#### Request body tambahan
+- `kieUploadPath` (default `music/paxsenix`)
+- `kieFileName` (opsional; kalau kosong auto: `<jobId>-<index>.mp3`)
+
+#### cURL
+```bash
+curl -X POST "https://<project>.vercel.app/api/ai-music/suno-music/wait-upload" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customMode": false,
+    "prompt": "lofi chill beat",
+    "kieUploadPath": "music/paxsenix"
+  }'
+```
+
+#### Response sukses (done + kieUploads) — contoh
+```json
+{
+  "Author": "@Dafidxcode",
+  "ok": true,
+  "status": "done",
+  "jobId": "1768393259037-n49bnbx3o",
+  "task_url": "https://api.paxsenix.org/task/1768393259037-n49bnbx3o",
+  "records": [
+    {
+      "audio_url": "https://cdn-0.paxsenix.org/file/....mp3"
+    }
+  ],
+  "kieUploads": [
+    {
+      "ok": true,
+      "recordIndex": 0,
+      "sourceAudioUrl": "https://cdn-0.paxsenix.org/file/....mp3",
+      "kie": {
+        "downloadUrl": "https://tempfile.redpandaai.co/xxx/music/paxsenix/....mp3",
+        "fileSizeBytes": 154832,
+        "fileSizeMB": 0.15,
+        "mimeType": "audio/mpeg",
+        "fileName": "1768393259037-n49bnbx3o-1.mp3",
+        "filePath": "music/paxsenix/1768393259037-n49bnbx3o-1.mp3",
+        "uploadedAt": "2025-01-01T12:00:00.000Z"
+      }
+    }
+  ]
+}
+```
+
+---
+
+### 4) Check Status by Job ID (Paxsenix)
 **GET** `/api/task/:jobId`
 
 #### cURL
@@ -228,9 +290,36 @@ curl -X POST "https://<project>.vercel.app/api/ai-music/suno-music/wait?timeoutM
 curl -X GET "https://<project>.vercel.app/api/task/1768393259037-n49bnbx3o"
 ```
 
-#### Response (pending/processing/done)
-Response akan sama seperti upstream, tetapi sudah dinormalisasi ke:
-- `Author: "@Dafidxcode"`
+---
+
+## KIE — Cover Audio
+
+### 5) Start Cover Audio (KIE)
+**POST** `/api/ai-music/cover-audio`
+
+Body minimal:
+```json
+{
+  "uploadUrl": "https://.../source.mp3",
+  "customMode": true,
+  "style": "Classical",
+  "title": "Peaceful Piano Meditation",
+  "prompt": "A calm and relaxing piano track",
+  "model": "V5"
+}
+```
+
+- Jika `callBackUrl` tidak dikirim, otomatis memakai:
+  - `https://<project>.vercel.app/api/ai-music/cover-audio/callback`
+
+### 6) Callback Cover Audio (KIE → Server)
+**POST** `/api/ai-music/cover-audio/callback`
+
+- Endpoint ini menerima callback dari KIE (`callbackType`: `text`, `first`, `complete`, dll).
+- Saat `callbackType="complete"`, endpoint akan **upload dulu track pertama** (`audio_url`) ke KIE file-url-upload dan mengembalikan field `kieUploadedFirstTrack`.
+
+> KIE mensyaratkan callback dibalas `200 OK` dalam 15 detik.
+
 
 
 ## Can I connect a custom domain to my Lovable project?
