@@ -170,6 +170,28 @@ const MusicTest = () => {
   // Shared jobId status checker
   const [jobId, setJobId] = useState("");
 
+  // Backend base URL (untuk preview Lovable yang tidak menjalankan /api)
+  const [apiBaseUrl, setApiBaseUrl] = useState(() => {
+    try {
+      return localStorage.getItem("musicTest.apiBaseUrl") ?? "";
+    } catch {
+      return "";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("musicTest.apiBaseUrl", apiBaseUrl);
+    } catch {
+      // ignore
+    }
+  }, [apiBaseUrl]);
+
+  const buildApiUrl = (path: string) => {
+    const base = apiBaseUrl.trim().replace(/\/+$/, "");
+    return base ? `${base}${path}` : path;
+  };
+
   // KIE upload options (for wait-upload)
   const [kieUploadPath, setKieUploadPath] = useState("music/paxsenix");
   const [kieFileName, setKieFileName] = useState("");
@@ -250,7 +272,7 @@ const MusicTest = () => {
 
     setLoading("pax-generate");
     try {
-      const resp = await fetch("/api/ai-music/suno-music", {
+      const resp = await fetch(buildApiUrl("/api/ai-music/suno-music"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(valid),
@@ -278,7 +300,9 @@ const MusicTest = () => {
 
     setLoading("pax-wait");
     try {
-      const resp = await fetch("/api/ai-music/suno-music/wait?timeoutMs=300000&pollIntervalMs=5000", {
+      const resp = await fetch(
+        buildApiUrl("/api/ai-music/suno-music/wait") + "?timeoutMs=300000&pollIntervalMs=5000",
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(valid),
@@ -306,7 +330,9 @@ const MusicTest = () => {
 
     setLoading("pax-wait-upload");
     try {
-      const resp = await fetch("/api/ai-music/suno-music/wait-upload?timeoutMs=300000&pollIntervalMs=5000", {
+      const resp = await fetch(
+        buildApiUrl("/api/ai-music/suno-music/wait-upload") + "?timeoutMs=300000&pollIntervalMs=5000",
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -341,7 +367,7 @@ const MusicTest = () => {
 
     setLoading("status");
     try {
-      const resp = await fetch(`/api/task/${encodeURIComponent(id)}`);
+      const resp = await fetch(buildApiUrl(`/api/task/${encodeURIComponent(id)}`));
       const data = (await resp.json().catch(() => ({}))) as ApiResult;
       setStatusResult(data);
 
@@ -388,7 +414,7 @@ const MusicTest = () => {
 
     setLoading("cover-start");
     try {
-      const resp = await fetch("/api/ai-music/cover-audio", {
+      const resp = await fetch(buildApiUrl("/api/ai-music/cover-audio"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsed.data),
@@ -421,7 +447,7 @@ const MusicTest = () => {
 
     setLoading("cover-callback");
     try {
-      const resp = await fetch("/api/ai-music/cover-audio/callback", {
+      const resp = await fetch(buildApiUrl("/api/ai-music/cover-audio/callback"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(parsedBody),
@@ -478,6 +504,31 @@ const MusicTest = () => {
       </header>
 
       <section className="mx-auto w-full max-w-5xl px-4 py-6">
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base">Backend Base URL</CardTitle>
+            <CardDescription>
+              Jika Anda tes di preview Lovable dan dapat <span className="font-mono">404</span>, isi base URL backend Vercel Anda (contoh:
+              <span className="font-mono"> https://&lt;project&gt;.vercel.app</span>). Kosongkan untuk pakai same-origin.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Label htmlFor="apiBaseUrl">API Base URL</Label>
+            <Input
+              id="apiBaseUrl"
+              value={apiBaseUrl}
+              onChange={(e) => setApiBaseUrl(e.target.value)}
+              placeholder="https://<project>.vercel.app"
+            />
+            {!apiBaseUrl.trim() && typeof window !== "undefined" && window.location.host.includes("lovableproject.com") ? (
+              <p className="text-xs text-muted-foreground">
+                Anda sedang di preview Lovable (frontend only). Endpoint <span className="font-mono">/api/*</span> tidak tersedia di sini,
+                jadi akan 404 sampai Anda mengisi API Base URL.
+              </p>
+            ) : null}
+          </CardContent>
+        </Card>
+
         <Tabs defaultValue="pax" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="pax">Paxsenix</TabsTrigger>
